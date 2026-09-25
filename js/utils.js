@@ -1,0 +1,403 @@
+/* أدوات مشتركة: عرض، تواريخ، نوافذ، تصدير، ومنطق البرنامج */
+
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const nl2br = s => esc(s).replace(/\n/g, '<br>');
+const byOrder = (a, b) => (a.order ?? 0) - (b.order ?? 0);
+
+/* الأرقام إنجليزية دائماً */
+function toEnDigits(s) {
+  return String(s ?? '')
+    .replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d))
+    .replace(/[۰-۹]/g, d => '۰۱۲۳۴۵۶۷۸۹'.indexOf(d));
+}
+
+const WEEKDAYS = ['الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
+const pad = n => String(n).padStart(2, '0');
+const todayISO = () => { const d = new Date(); return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`; };
+
+function parseISO(iso) {
+  const [y, m, d] = String(iso).split('-').map(Number);
+  return new Date(y, m - 1, d);
+}
+function fmtDate(iso) {
+  if (!iso) return '—';
+  const d = parseISO(iso);
+  return `${WEEKDAYS[d.getDay()]} ${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()}`;
+}
+function fmtTs(ts) {
+  if (!ts) return '—';
+  const d = new Date(ts);
+  return `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+const dateTimeOf = (date, time) => new Date(`${date}T${time || '00:00'}:00`);
+const daysBetween = (a, b) => Math.round((parseISO(b) - parseISO(a)) / 86400000);
+function minutesBetween(start, end) {
+  const [h1, m1] = String(start).split(':').map(Number);
+  const [h2, m2] = String(end).split(':').map(Number);
+  return Math.max(0, (h2 * 60 + m2) - (h1 * 60 + m1));
+}
+const fmtSlot = x => `${fmtDate(x.date)} · ${x.start} - ${x.end}`;
+
+function timeSelect(name, value = '') {
+  const [hv, mv] = String(value || '').split(':');
+  const hours = Array.from({ length: 24 }, (_, i) => pad(i));
+  const mins = ['00', '05', '10', '15', '20', '25', '30', '35', '40', '45', '50', '55'];
+  return `<div class="time-select" data-time="${name}">
+    <select data-part="h">${hours.map(h => `<option ${h === hv ? 'selected' : ''}>${h}</option>`).join('')}</select>
+    <span>:</span>
+    <select data-part="m">${mins.map(m => `<option ${m === mv ? 'selected' : ''}>${m}</option>`).join('')}</select>
+  </div>`;
+}
+const readTime = (root, name) => {
+  const w = root.querySelector(`[data-time="${name}"]`);
+  return `${w.querySelector('[data-part=h]').value}:${w.querySelector('[data-part=m]').value}`;
+};
+
+/* روابط الصور والتواصل */
+function driveImg(url) {
+  url = String(url || '').trim();
+  if (!url) return '';
+  const m = url.match(/\/d\/([\w-]{10,})/) || url.match(/[?&]id=([\w-]{10,})/);
+  if (m && /drive\.google|docs\.google|googleusercontent/.test(url)) return `https://drive.google.com/thumbnail?id=${m[1]}&sz=w600`;
+  return url;
+}
+function normPhone(p) {
+  let d = toEnDigits(p).replace(/\D/g, '');
+  if (d.startsWith('00')) d = d.slice(2);
+  if (d.startsWith('05') && d.length === 10) d = '966' + d.slice(1);
+  else if (d.startsWith('5') && d.length === 9) d = '966' + d;
+  return d;
+}
+const waLink = (phone, text = '') => `https://wa.me/${normPhone(phone)}${text ? '?text=' + encodeURIComponent(text) : ''}`;
+
+function contactHref(k, v) {
+  v = String(v || '').trim();
+  if (!v) return '';
+  if (k === 'whatsapp') return /^https?:/.test(v) ? v : waLink(v);
+  if (k === 'email') return v.startsWith('mailto:') ? v : `mailto:${v}`;
+  if (/^https?:\/\//i.test(v)) return v;
+  const handle = v.replace(/^@/, '');
+  const bases = { twitter: 'https://x.com/', instagram: 'https://instagram.com/', tiktok: 'https://www.tiktok.com/@', snapchat: 'https://www.snapchat.com/add/', linkedin: 'https://www.linkedin.com/in/' };
+  return bases[k] && !v.includes('.') ? bases[k] + handle : 'https://' + v;
+}
+
+function socialLinks(obj, cls = 'social') {
+  const out = SOCIALS.filter(s => obj && String(obj[s.k] || '').trim())
+    .map(s => `<a class="${cls}-link" href="${esc(contactHref(s.k, obj[s.k]))}" target="_blank" rel="noopener" title="${s.label}" aria-label="${s.label}"><i class="${s.icon}"></i></a>`);
+  return out.length ? `<div class="${cls}">${out.join('')}</div>` : '';
+}
+
+function initials(name) {
+  const w = String(name || '').replace(/^(م|أ|د|المهندس|الأستاذ|الدكتور)\s*[./]?\s*/, '').trim().split(/\s+/)
+    .map(x => x.replace(/^ال(?=..)/, '')).filter(Boolean);
+  return esc((w[0]?.[0] || '؟') + (w[1]?.[0] ? ' ' + w[1][0] : ''));
+}
+function avatar(m, size = '') {
+  const src = driveImg(m?.photo);
+  return `<span class="avatar ${size}"><span class="avatar-fallback">${initials(m?.name)}</span>${src ? `<img src="${esc(src)}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()">` : ''}</span>`;
+}
+
+/* بطاقة العضو الموحدة */
+function memberCard(m, opts = {}) {
+  if (!m) return '';
+  const areasLabel = m.role === 'mentor' ? 'مجالات الإرشاد' : 'مجالات الاهتمام';
+  const areas = String(m.areas || '').split(/[،,\n]/).map(s => s.trim()).filter(Boolean);
+  return `<article class="member-card ${m.role}" data-id="${esc(m.id)}">
+    <header class="mc-head">
+      ${opts.showCode !== false ? `<span class="code-chip" title="رقم العضوية"><i class="fa-solid fa-key"></i> ${esc(m.code)}</span>` : '<span></span>'}
+      <span class="role-chip">${m.role === 'mentor' ? 'مرشد' : 'مستفيد'}</span>
+    </header>
+    <div class="mc-body">
+      ${avatar(m, 'xl')}
+      <h4 class="mc-name">${esc(m.name)}</h4>
+      ${m.tagline ? `<p class="mc-tag">${esc(m.tagline)}</p>` : ''}
+      ${m.bio ? `<p class="mc-bio">${nl2br(m.bio)}</p>` : ''}
+      ${areas.length ? `<div class="mc-areas"><small>${areasLabel}</small><div>${areas.map(a => `<span class="chip">${esc(a)}</span>`).join('')}</div></div>` : ''}
+      ${socialLinks(m, 'mc-social')}
+    </div>
+    ${opts.actions ? `<footer class="mc-actions">${opts.actions}</footer>` : ''}
+  </article>`;
+}
+
+function miniMember(m) {
+  if (!m) return '<span class="muted">غير محدد</span>';
+  return `<span class="mini-member">${avatar(m, 'sm')}<span><b>${esc(m.name)}</b>${m.tagline ? `<small>${esc(m.tagline)}</small>` : ''}</span></span>`;
+}
+
+/* الإشعارات السريعة */
+function toast(msg, type = 'ok') {
+  let host = $('#toasts');
+  if (!host) { host = document.createElement('div'); host.id = 'toasts'; document.body.appendChild(host); }
+  const t = document.createElement('div');
+  t.className = `toast ${type}`;
+  t.innerHTML = `<i class="fa-solid ${type === 'error' ? 'fa-circle-exclamation' : 'fa-circle-check'}"></i><span>${esc(msg)}</span>`;
+  host.appendChild(t);
+  setTimeout(() => t.classList.add('out'), 3200);
+  setTimeout(() => t.remove(), 3700);
+}
+
+/* النوافذ المنبثقة */
+function openModal({ title = '', body = '', actions = [], size = '', onOpen, onClose, dismissible = true, cls = '' }) {
+  const wrap = document.createElement('div');
+  wrap.className = `modal-wrap ${cls}`;
+  wrap.innerHTML = `<div class="modal ${size}" role="dialog" aria-modal="true">
+    <header class="modal-head"><h3>${title}</h3>${dismissible ? '<button class="icon-btn modal-x" aria-label="إغلاق"><i class="fa-solid fa-xmark"></i></button>' : ''}</header>
+    <div class="modal-body">${body}</div>
+    ${actions.length ? `<footer class="modal-foot">${actions.map((a, i) => `<button class="btn ${a.cls || ''}" data-act="${i}">${a.label}</button>`).join('')}</footer>` : ''}
+  </div>`;
+  document.body.appendChild(wrap);
+  document.body.classList.add('modal-open');
+  requestAnimationFrame(() => wrap.classList.add('show'));
+  const api = {
+    el: wrap,
+    body: $('.modal-body', wrap),
+    close() {
+      wrap.classList.remove('show');
+      setTimeout(() => { wrap.remove(); if (!$('.modal-wrap')) document.body.classList.remove('modal-open'); }, 200);
+      document.removeEventListener('keydown', onKey);
+      onClose && onClose();
+    }
+  };
+  const onKey = e => { if (e.key === 'Escape' && dismissible && wrap === $$('.modal-wrap').pop()) api.close(); };
+  document.addEventListener('keydown', onKey);
+  if (dismissible) {
+    $('.modal-x', wrap).onclick = api.close;
+    wrap.addEventListener('mousedown', e => { if (e.target === wrap) api.close(); });
+  }
+  $$('[data-act]', wrap).forEach(b => {
+    b.onclick = async () => {
+      const a = actions[+b.dataset.act];
+      if (!a.onClick) return api.close();
+      const r = await a.onClick(api);
+      if (r !== false) api.close();
+    };
+  });
+  onOpen && onOpen(api);
+  setTimeout(() => { const f = $('input:not([type=hidden]),textarea,select', api.body); f && !('ontouchstart' in window) && f.focus(); }, 60);
+  return api;
+}
+
+function confirmDialog(msg, { ok = 'تأكيد', cancel = 'إلغاء', danger = false, title = 'تأكيد' } = {}) {
+  return new Promise(res => {
+    openModal({
+      title, size: 'sm', body: `<p class="confirm-msg">${msg}</p>`,
+      actions: [
+        { label: ok, cls: danger ? 'danger' : 'primary', onClick: () => res(true) },
+        { label: cancel, cls: 'ghost', onClick: () => res(false) }
+      ],
+      onClose: () => res(false)
+    });
+  });
+}
+
+/* نماذج عامة */
+function fieldInput(f, value = '') {
+  const id = 'fi_' + Math.random().toString(36).slice(2, 8);
+  const req = f.required ? 'required' : '';
+  const lbl = `<label for="${id}">${esc(f.label)}${f.required ? ' <em>*</em>' : ''}</label>`;
+  let input;
+  switch (f.type) {
+    case 'textarea': input = `<textarea id="${id}" name="${esc(f.k)}" rows="${f.rows || 4}" ${req} placeholder="${esc(f.placeholder || '')}">${esc(value)}</textarea>`; break;
+    case 'select': input = `<select id="${id}" name="${esc(f.k)}" ${req}><option value="">— اختر —</option>${(f.options || []).map(o => `<option ${o === value ? 'selected' : ''}>${esc(o)}</option>`).join('')}</select>`; break;
+    case 'radio': return `<div class="field">${lbl}<div class="radio-row">${(f.options || []).map((o, i) => `<label class="radio"><input type="radio" name="${esc(f.k)}" value="${esc(o.value ?? o)}" ${(o.value ?? o) === value ? 'checked' : ''} ${req}><span>${esc(o.label ?? o)}</span></label>`).join('')}</div></div>`;
+    case 'checkbox': return `<label class="check"><input type="checkbox" name="${esc(f.k)}" ${value ? 'checked' : ''}><span>${esc(f.label)}</span></label>`;
+    default: input = `<input id="${id}" name="${esc(f.k)}" type="${f.type || 'text'}" value="${esc(value)}" ${req} placeholder="${esc(f.placeholder || '')}" ${f.type === 'tel' ? 'inputmode="tel" dir="ltr"' : ''} ${['email', 'url'].includes(f.type) ? 'dir="ltr"' : ''}>`;
+  }
+  return `<div class="field ${f.wide ? 'wide' : ''}">${lbl}${input}${f.hint ? `<small class="hint">${f.hint}</small>` : ''}</div>`;
+}
+
+function readForm(root) {
+  const out = {};
+  $$('input,textarea,select', root).forEach(el => {
+    if (!el.name) return;
+    if (el.type === 'checkbox') out[el.name] = el.checked;
+    else if (el.type === 'radio') { if (el.checked) out[el.name] = el.value; }
+    else out[el.name] = el.type === 'tel' ? toEnDigits(el.value).trim() : el.value.trim();
+  });
+  return out;
+}
+function validateForm(root) {
+  const bad = $$('input,textarea,select', root).find(el => !el.checkValidity());
+  if (bad) { bad.reportValidity(); return false; }
+  return true;
+}
+
+/* تصدير CSV و PDF */
+function csvCell(v) {
+  v = String(v ?? '');
+  return /[",\n\r]/.test(v) ? `"${v.replace(/"/g, '""')}"` : v;
+}
+function toCSV(headers, rows) {
+  return '﻿' + [headers, ...rows].map(r => r.map(csvCell).join(',')).join('\r\n');
+}
+function download(filename, content, mime = 'text/csv;charset=utf-8') {
+  const blob = content instanceof Blob ? content : new Blob([content], { type: mime });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob); a.download = filename;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+}
+function parseCSV(text) {
+  text = String(text).replace(/^﻿/, '');
+  const rows = []; let row = [], cur = '', q = false;
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i];
+    if (q) {
+      if (c === '"') { if (text[i + 1] === '"') { cur += '"'; i++; } else q = false; }
+      else cur += c;
+    } else if (c === '"') q = true;
+    else if (c === ',' || c === ';' && !text.includes(',')) { row.push(cur); cur = ''; }
+    else if (c === '\n' || c === '\r') {
+      if (c === '\r' && text[i + 1] === '\n') i++;
+      row.push(cur); rows.push(row); row = []; cur = '';
+    } else cur += c;
+  }
+  if (cur || row.length) { row.push(cur); rows.push(row); }
+  return rows.filter(r => r.some(c => String(c).trim()));
+}
+
+function exportPDF(title, html) {
+  const w = window.open('', '_blank');
+  if (!w) return toast('اسمح بالنوافذ المنبثقة لتصدير PDF', 'error');
+  const base = location.href.replace(/[#?].*$/, '').replace(/[^/]*$/, '');
+  w.document.write(`<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><title>${esc(title)}</title>
+    <base href="${base}">
+    <link rel="stylesheet" href="vendor/fontawesome/css/all.min.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&family=IBM+Plex+Sans+Arabic:wght@400;500;600&display=swap">
+    <link rel="stylesheet" href="css/style.css"></head>
+    <body class="print-doc"><header class="print-head"><img src="assets/ishraq-logo.png" alt=""><div><h1>${esc(title)}</h1><small>${fmtTs(Date.now())}</small></div></header>${html}
+    <script>setTimeout(()=>{window.print();},900)<\/script></body></html>`);
+  w.document.close();
+}
+
+function exportBar(key) {
+  return `<span class="export-bar">
+    <button class="icon-btn" data-export="${key}" data-fmt="pdf" title="تصدير PDF"><i class="fa-solid fa-file-pdf"></i></button>
+    <button class="icon-btn" data-export="${key}" data-fmt="csv" title="تصدير CSV"><i class="fa-solid fa-file-csv"></i></button>
+  </span>`;
+}
+
+/* ============ منطق البرنامج ============ */
+const STATUS = {
+  upcoming: { label: 'قادمة', cls: 'st-upcoming' },
+  done: { label: 'منجزة', cls: 'st-done' },
+  absent_mentor: { label: 'ملغاة لغياب المرشد', cls: 'st-absent-mentor' },
+  absent_mentee: { label: 'ملغاة لغياب المستفيد', cls: 'st-absent-mentee' }
+};
+const statusPill = s => `<span class="pill ${STATUS[s]?.cls || ''}">${STATUS[s]?.label || s}</span>`;
+const MODES = { inperson: 'حضوري', online: 'إلكتروني', both: 'حضوري أو إلكتروني' };
+const sessionName = n => `الجلسة ${ORDINALS[n - 1] || n}`;
+
+const Data = {
+  cohorts: () => Store.list('cohorts').sort((a, b) => a.num - b.num),
+  cohort: id => Store.get(`cohorts/${id}`),
+  members: (role, cohortId) => Store.list('members')
+    .filter(m => (!role || m.role === role) && (!cohortId || m.cohort === cohortId))
+    .sort((a, b) => (a.cohort === b.cohort ? (a.seq - b.seq) : String(a.cohort).localeCompare(b.cohort))),
+  member: id => id ? Store.get(`members/${id}`) : null,
+  byCode(code) {
+    code = toEnDigits(code).trim().toUpperCase();
+    return Store.list('members').find(m => String(m.code).toUpperCase() === code);
+  },
+  menteeOf(mentorId) {
+    const m = Data.member(mentorId);
+    if (!m) return null;
+    return Data.member(Store.get(`network/${m.cohort}/${mentorId}`));
+  },
+  mentorOf(menteeId) {
+    const m = Data.member(menteeId);
+    if (!m) return null;
+    const net = Store.get(`network/${m.cohort}`) || {};
+    const mid = Object.keys(net).find(k => net[k] === menteeId);
+    return Data.member(mid);
+  },
+  slots: mentorId => Store.list('slots').filter(s => s.mentorId === mentorId)
+    .sort((a, b) => a.session - b.session || (a.date + a.start).localeCompare(b.date + b.start)),
+  bookings: filter => Store.list('bookings').filter(b => !filter || Object.entries(filter).every(([k, v]) => b[k] === v))
+    .sort((a, b) => a.session - b.session || (a.date + a.start).localeCompare(b.date + b.start)),
+  reviews: filter => Store.list('reviews').filter(r => !filter || Object.entries(filter).every(([k, v]) => r[k] === v))
+    .sort((a, b) => (a.session || 9) - (b.session || 9) || a.ts - b.ts),
+  stats(bookings) {
+    const s = { total: bookings.length, upcoming: 0, done: 0, absent_mentor: 0, absent_mentee: 0, minutes: 0 };
+    bookings.forEach(b => { s[b.status] = (s[b.status] || 0) + 1; if (b.status === 'done') s.minutes += minutesBetween(b.start, b.end); });
+    s.hours = Math.round(s.minutes / 6) / 10;
+    return s;
+  },
+  activeBooking(menteeId, session) {
+    return Data.bookings({ menteeId }).find(b => b.session === session && ['upcoming', 'done'].includes(b.status));
+  },
+  doneCount: (key, id) => Data.bookings({ [key]: id }).filter(b => b.status === 'done').length,
+  notify(to, text, extra = {}) {
+    Store.push('notifications', { to, text, ts: Date.now(), read: false, ...extra });
+  },
+  notifications: to => Store.list('notifications').filter(n => n.to === to).sort((a, b) => b.ts - a.ts),
+  messagesFor(m) {
+    return Store.list('messages').filter(x =>
+      (x.target === 'member' && x.memberId === m.id) ||
+      x.target === 'all' ||
+      (x.target === 'all_mentors' && m.role === 'mentor') ||
+      (x.target === 'all_mentees' && m.role === 'mentee')
+    ).sort((a, b) => b.ts - a.ts);
+  },
+  nextCode(role, cohortId) {
+    const c = Data.cohort(cohortId);
+    const key = `counters/${role}_${cohortId}`;
+    const existing = Data.members(role, cohortId).map(m => m.seq || 0);
+    const seq = Math.max(10, Store.get(key) || 0, ...existing) + 1;
+    return { seq, code: `${role === 'mentor' ? 'M' : 'B'}${c.num}${seq}`, key };
+  },
+  addMember(role, cohortId, data) {
+    const { seq, code, key } = Data.nextCode(role, cohortId);
+    Store.set(key, seq);
+    const id = Store.push('members', { ...data, role, cohort: cohortId, seq, code, createdAt: Date.now() });
+    return Data.member(id) || { id, code };
+  },
+  removeMember(id) {
+    const m = Data.member(id);
+    if (!m) return;
+    const net = Store.get(`network/${m.cohort}`) || {};
+    if (m.role === 'mentor') Store.remove(`network/${m.cohort}/${id}`);
+    else Object.keys(net).forEach(k => net[k] === id && Store.remove(`network/${m.cohort}/${k}`));
+    Store.remove(`members/${id}`);
+  }
+};
+
+function statsBoxes(s, withHours = false) {
+  const box = (v, l, cls, icon) => `<div class="stat-box ${cls}"><i class="fa-solid ${icon}"></i><b>${v}</b><span>${l}</span></div>`;
+  return `<div class="stat-boxes">
+    ${box(s.total, 'إجمالي الجلسات', 'st-total', 'fa-layer-group')}
+    ${box(s.upcoming, 'الجلسات القادمة', 'st-upcoming', 'fa-hourglass-half')}
+    ${box(s.done, 'الجلسات المنجزة', 'st-done', 'fa-circle-check')}
+    ${box(s.absent_mentor, 'ملغاة لغياب المرشد', 'st-absent-mentor', 'fa-user-slash')}
+    ${box(s.absent_mentee, 'ملغاة لغياب المستفيد', 'st-absent-mentee', 'fa-user-xmark')}
+    ${withHours ? box(s.hours, 'ساعات إرشادية منجزة', 'st-hours', 'fa-clock') : ''}
+  </div>`;
+}
+
+function emptyState(text, icon = 'fa-inbox') {
+  return `<div class="empty"><i class="fa-solid ${icon}"></i><p>${text}</p></div>`;
+}
+
+/* قائمة الإشعارات في اللوحات */
+function bellButton(to) {
+  const unread = Data.notifications(to).filter(n => !n.read).length;
+  return `<button class="icon-btn bell" data-bell="${esc(to)}" title="الإشعارات"><i class="fa-solid fa-bell"></i>${unread ? `<span class="badge">${unread}</span>` : ''}</button>`;
+}
+function openNotifications(to) {
+  const list = Data.notifications(to);
+  openModal({
+    title: '<i class="fa-solid fa-bell"></i> الإشعارات',
+    body: list.length ? `<ul class="notif-list">${list.map(n => `<li class="${n.read ? '' : 'unread'}"><i class="fa-solid ${n.icon || 'fa-circle-info'}"></i><div><p>${esc(n.text)}</p><small>${fmtTs(n.ts)}</small></div></li>`).join('')}</ul>` : emptyState('لا توجد إشعارات بعد', 'fa-bell-slash'),
+    actions: list.length ? [
+      { label: 'مسح الكل', cls: 'ghost', onClick: () => list.forEach(n => Store.remove(`notifications/${n.id}`)) },
+      { label: 'إغلاق', cls: 'primary' }
+    ] : [],
+    onOpen: () => list.filter(n => !n.read).forEach(n => Store.set(`notifications/${n.id}/read`, true))
+  });
+}
+document.addEventListener('click', e => {
+  const b = e.target.closest('[data-bell]');
+  if (b) openNotifications(b.dataset.bell);
+});
