@@ -133,6 +133,21 @@ const Home = (() => {
         }).join('')}</div>
       </div></section>`;
     },
+    video(s) {
+      const v = videoEmbed(s.video);
+      const player = !v
+        ? `<div class="video-frame empty"><i class="fa-solid fa-video-slash"></i><p>أضف رابط مقطع من YouTube أو Google Drive</p></div>`
+        : v.kind === 'file'
+          ? `<div class="video-frame"><video src="${esc(v.src)}" controls playsinline preload="metadata"></video></div>`
+          : `<div class="video-frame" data-video-src="${esc(v.src)}" role="button" tabindex="0" aria-label="تشغيل المقطع">
+              <img src="${esc(v.thumb)}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()">
+              <span class="play-btn"><i class="fa-solid fa-play"></i></span></div>`;
+      return `<section class="sec video-sec" id="sec-${s.id}"><div class="container">
+        ${head(s)}
+        ${s.body ? `<p class="lead video-lead reveal">${nl2br(s.body)}</p>` : ''}
+        <div class="video-wrap reveal">${player}</div>
+      </div></section>`;
+    },
     custom(s) {
       const img = driveImg(s.image);
       const btn = s.button ? (s.buttonLink
@@ -181,7 +196,18 @@ const Home = (() => {
     wire(root);
   }
 
+  // تشغيل الفيديو داخل الصفحة نفسها
+  function playVideo(frame) {
+    if (frame.classList.contains('playing')) return;
+    frame.classList.add('playing');
+    frame.innerHTML = `<iframe src="${esc(frame.dataset.videoSrc)}" title="مقطع فيديو" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe>`;
+  }
+
   function wire(root) {
+    $$('[data-video-src]', root).forEach(f => {
+      f.addEventListener('click', () => playVideo(f));
+      f.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); playVideo(f); } });
+    });
     const io = new IntersectionObserver(es => es.forEach(e => {
       if (!e.isIntersecting) return;
       e.target.classList.add('in');

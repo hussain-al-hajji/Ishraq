@@ -13,6 +13,7 @@ const SECTION_TYPES = {
   register:     { label: 'إعلان التسجيل', icon: 'fa-bullhorn', fields: ['nav', 'kicker', 'title', 'body', 'deadline', 'button'] },
   members:      { label: 'أعضاء الدفعات', icon: 'fa-users', fields: ['nav', 'kicker', 'title', 'body', 'button'] },
   testimonials: { label: 'آراء المشاركين', icon: 'fa-quote-right', fields: ['nav', 'kicker', 'title', 'subtitle'] },
+  video:        { label: 'فيديو', icon: 'fa-circle-play', fields: ['nav', 'kicker', 'title', 'body', 'video'] },
   custom:       { label: 'قسم مخصص', icon: 'fa-pen-ruler', fields: ['nav', 'kicker', 'title', 'body', 'image', 'button', 'buttonLink'] },
   portals:      { label: 'أزرار الدخول', icon: 'fa-right-to-bracket', fields: ['title', 'body'], single: true },
   footer:       { label: 'التذييل (Footer)', icon: 'fa-shoe-prints', fields: ['body', 'copyright'], single: true, social: true }
@@ -33,6 +34,7 @@ const FIELD_META = {
   button2: ['نص الزر الثاني (صفحة الأعضاء)', 'text'],
   buttonLink: ['رابط الزر (اتركه فارغاً لفتح نموذج التسجيل)', 'url'],
   image: ['رابط صورة (Google Drive أو رابط مباشر)', 'url'],
+  video: ['رابط المقطع (YouTube أو Google Drive)', 'url'],
   copyright: ['سطر الحقوق', 'text']
 };
 

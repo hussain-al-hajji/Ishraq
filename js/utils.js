@@ -65,6 +65,22 @@ function driveImg(url) {
   if (m && /drive\.google|docs\.google|googleusercontent/.test(url)) return `https://drive.google.com/thumbnail?id=${m[1]}&sz=w600`;
   return url;
 }
+/* روابط الفيديو: YouTube أو Google Drive -> رابط تضمين يعمل داخل الصفحة */
+function videoEmbed(url) {
+  url = String(url || '').trim();
+  if (!url) return null;
+  let m = url.match(/(?:youtube\.com\/(?:watch\?(?:.*&)?v=|embed\/|shorts\/|live\/|v\/)|youtu\.be\/)([\w-]{11})/);
+  if (m) {
+    const t = url.match(/[?&](?:t|start)=(\d+)/);
+    return { kind: 'youtube', id: m[1], thumb: `https://i.ytimg.com/vi/${m[1]}/hqdefault.jpg`,
+      src: `https://www.youtube-nocookie.com/embed/${m[1]}?autoplay=1&rel=0&playsinline=1&modestbranding=1${t ? '&start=' + t[1] : ''}` };
+  }
+  m = url.match(/drive\.google\.com\/(?:file\/d\/|open\?id=|uc\?(?:.*&)?id=)([\w-]{10,})/);
+  if (m) return { kind: 'drive', id: m[1], thumb: `https://drive.google.com/thumbnail?id=${m[1]}&sz=w1280`, src: `https://drive.google.com/file/d/${m[1]}/preview` };
+  if (/\.(mp4|webm|ogg)(\?|$)/i.test(url)) return { kind: 'file', src: url };
+  return null;
+}
+
 function normPhone(p) {
   let d = toEnDigits(p).replace(/\D/g, '');
   if (d.startsWith('00')) d = d.slice(2);

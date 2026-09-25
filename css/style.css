@@ -239,6 +239,21 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .quote figcaption b { display: block; }
 .quote figcaption small { color: var(--muted); }
 
+.video-lead { text-align: center; max-width: 760px; margin: -24px auto 32px; }
+.video-wrap { max-width: 960px; margin: 0 auto; padding: 10px; border-radius: 28px; background: var(--grad); box-shadow: var(--sh-lg); }
+.video-frame { position: relative; aspect-ratio: 16 / 9; border-radius: 20px; overflow: hidden; background: #1c1740; cursor: pointer; }
+.video-frame img, .video-frame iframe, .video-frame video { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; object-fit: cover; }
+.video-frame video { object-fit: contain; background: #000; cursor: auto; }
+.video-frame.playing { cursor: auto; }
+.video-frame:not(.playing)::after { content: ''; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(46,37,99,.05), rgba(46,37,99,.45)); transition: .3s; }
+.play-btn { position: absolute; z-index: 1; left: 50%; top: 50%; transform: translate(-50%, -50%); width: 88px; height: 88px; border-radius: 50%; display: grid; place-items: center; background: rgba(255,255,255,.95); color: var(--p-d); font-size: 1.9rem; box-shadow: 0 0 0 12px rgba(255,255,255,.25), 0 20px 40px -10px rgba(0,0,0,.5); transition: .3s; }
+.play-btn i { margin-left: 6px; }
+.video-frame:hover .play-btn { transform: translate(-50%, -50%) scale(1.08); background: #fff; }
+.video-frame.empty { display: grid; place-content: center; justify-items: center; gap: 8px; color: rgba(255,255,255,.7); cursor: default; }
+.video-frame.empty i { font-size: 2.4rem; }
+.video-frame.empty p { margin: 0; }
+@media (max-width: 560px) { .video-wrap { padding: 6px; border-radius: 20px; } .video-frame { border-radius: 15px; } .play-btn { width: 68px; height: 68px; font-size: 1.5rem; } }
+
 .custom-sec.has-img { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; align-items: center; }
 .custom-sec .sec-head { text-align: start; margin: 0 0 16px; }
 .custom-sec img { border-radius: var(--r); box-shadow: var(--sh-lg); width: 100%; object-fit: cover; }

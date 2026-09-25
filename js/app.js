@@ -49,6 +49,9 @@
       Home.renderMembers(root);
     } else {
       document.title = 'إشراق | معك لمستقبل طموح';
+      // لا نعيد رسم الصفحة أثناء تشغيل مقطع فيديو حتى لا يتوقف
+      const playing = $$('.video-frame.playing', root).length || $$('.video-frame video', root).some(v => !v.paused);
+      if (fromData && same && playing) return;
       Home.render(root, fromData);
       if (!fromData) setTimeout(Home.maybeAnnouncement, 700);
     }
