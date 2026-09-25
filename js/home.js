@@ -309,7 +309,7 @@ const Home = (() => {
   /* الدخول */
   function openLogin(kind) {
     const labels = { admin: 'دخول الإدارة', mentor: 'دخول المرشد', mentee: 'دخول المستفيد' };
-    const hint = kind === 'admin' ? 'أدخل الرمز السري للإدارة' : `أدخل رقم العضوية (مثال: ${kind === 'mentor' ? 'M211' : 'B211'})`;
+    const hint = kind === 'admin' ? 'أدخل الرمز السري للإدارة' : 'أدخل رقم العضوية';
     openModal({
       title: `<i class="fa-solid fa-lock"></i> ${labels[kind]}`, size: 'sm',
       body: `<form class="login-form"><p class="muted">${hint}</p>

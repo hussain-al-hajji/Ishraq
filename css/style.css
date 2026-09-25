@@ -298,9 +298,12 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 20px; }
 .member-card { display: flex; flex-direction: column; background: #fff; border: 1px solid var(--line); border-radius: 22px; overflow: hidden; transition: .3s; box-shadow: 0 4px 16px -10px rgba(46,37,99,.25); }
 .member-card:hover { box-shadow: var(--sh-lg); transform: translateY(-3px); }
-.mc-head { display: flex; justify-content: space-between; align-items: center; padding: 12px 14px 42px; background: var(--grad); }
-.member-card.mentee .mc-head { background: linear-gradient(135deg, var(--b-d), var(--b)); }
-.mc-head .code-chip { background: rgba(255,255,255,.2); border: 1px solid rgba(255,255,255,.35); }
+.mc-head { display: flex; justify-content: space-between; align-items: flex-start; padding: 12px 14px 44px; background: linear-gradient(135deg, var(--b-d), var(--b)); }
+.member-card.mentee .mc-head { background: var(--grad); }
+.mc-logo { height: 54px; width: auto; object-fit: contain; }
+.mc-meta { display: flex; flex-direction: column; align-items: flex-end; gap: 5px; }
+.mc-head .code-chip { background: transparent; border: 1.5px solid rgba(255,255,255,.85); color: #fff; }
+.mc-head .role-chip { background: transparent; border: 1.5px solid rgba(255,255,255,.85); }
 .role-chip { color: #fff; font-size: .78rem; font-weight: 700; background: rgba(0,0,0,.15); padding: .15em .75em; border-radius: 999px; }
 .mc-body { display: flex; flex-direction: column; align-items: center; text-align: center; padding: 0 20px 20px; margin-top: -58px; flex: 1; }
 .mc-body .avatar.xl { box-shadow: 0 0 0 5px #fff, 0 10px 24px -8px rgba(46,37,99,.45); }

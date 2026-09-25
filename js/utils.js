@@ -106,8 +106,11 @@ function memberCard(m, opts = {}) {
   const areas = String(m.areas || '').split(/[،,\n]/).map(s => s.trim()).filter(Boolean);
   return `<article class="member-card ${m.role}" data-id="${esc(m.id)}">
     <header class="mc-head">
-      ${opts.showCode !== false ? `<span class="code-chip" title="رقم العضوية"><i class="fa-solid fa-key"></i> ${esc(m.code)}</span>` : '<span></span>'}
-      <span class="role-chip">${m.role === 'mentor' ? 'مرشد' : 'مستفيد'}</span>
+      <img class="mc-logo" src="assets/ishraq-logo-white.png" alt="إشراق">
+      <div class="mc-meta">
+        ${opts.showCode !== false ? `<span class="code-chip" title="رقم العضوية">${esc(m.code)}</span>` : ''}
+        <span class="role-chip">${m.role === 'mentor' ? 'مرشد' : 'مستفيد'}</span>
+      </div>
     </header>
     <div class="mc-body">
       ${avatar(m, 'xl')}
