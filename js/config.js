@@ -11,5 +11,7 @@ window.ISHRAQ_CONFIG = {
     // يمكن إضافة بقية مفاتيح المشروع هنا (apiKey, authDomain, projectId ...) عند الحاجة
   },
   dbRoot: 'ishraq',
-  adminCode: '2026'
+  adminCode: '2026',
+  // رابط المنصة الذي يُرسل للأعضاء في رسالة معلومات الدخول
+  siteUrl: 'https://hussain-al-hajji.github.io/Ishraq/'
 };

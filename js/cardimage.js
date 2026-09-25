@@ -237,5 +237,11 @@ const CardImage = (() => {
     }
   }
 
-  return { render, download };
+  async function toBlob(m) {
+    const { canvas, photoFailed } = await render(m);
+    const blob = await new Promise(r => canvas.toBlob(r, 'image/png'));
+    return { blob, photoFailed };
+  }
+
+  return { render, download, toBlob };
 })();

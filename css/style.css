@@ -319,7 +319,13 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .mc-social-link:hover { background: var(--p-d); color: #fff; }
 .mc-social-link .fa-whatsapp { color: #1FAF54; }
 .mc-social-link:hover .fa-whatsapp { color: #fff; }
-.mc-actions { display: flex; gap: 8px; justify-content: center; padding: 12px; border-top: 1px solid var(--line); background: #FBFAFE; }
+.mc-actions { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; padding: 12px; border-top: 1px solid var(--line); background: #FBFAFE; }
+.mc-actions .send-cred { flex: 1 1 100%; }
+.cred-preview { display: grid; place-items: center; min-height: 160px; margin-bottom: 14px; padding: 12px; border-radius: 16px; background: var(--bg); }
+.cred-preview img { max-height: 340px; width: auto; border-radius: 12px; }
+.cred-loading { color: var(--muted); }
+.cred-hint { display: block; margin-top: 10px; line-height: 1.7; }
+.err-hint { color: var(--bad); text-align: center; }
 .add-card { display: grid; place-content: center; justify-items: center; gap: 10px; min-height: 300px; border: 2px dashed #CFC8EA; border-radius: 22px; background: rgba(238,235,248,.4); color: var(--p-d); cursor: pointer; font-weight: 700; font-family: var(--font-head); transition: .25s; }
 .add-card i { width: 64px; height: 64px; border-radius: 50%; display: grid; place-items: center; background: var(--grad); color: #fff; font-size: 1.6rem; transition: .25s; }
 .add-card:hover { border-color: var(--p); background: var(--p-l); }

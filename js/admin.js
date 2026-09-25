@@ -281,7 +281,7 @@ const Admin = (() => {
       </label>
       <div class="card-grid">
         <button class="add-card" data-add-member="${role}"><i class="fa-solid fa-plus"></i><span>إضافة ${role === 'mentor' ? 'مرشد' : 'مستفيد'} جديد</span></button>
-        ${list.map(m => memberCard(m, { actions: `<button class="btn xs ghost" data-edit-member="${m.id}"><i class="fa-solid fa-pen"></i> تعديل</button><button class="btn xs ghost danger" data-del-member="${m.id}"><i class="fa-solid fa-trash"></i> حذف</button>` })).join('')}
+        ${list.map(m => memberCard(m, { actions: `<button class="btn xs wa send-cred" data-send-cred="${m.id}"><i class="fa-brands fa-whatsapp"></i> إرسال معلومات الدخول${m.credSentAt ? ' <i class="fa-solid fa-check-double" title="أُرسلت سابقاً"></i>' : ''}</button><button class="btn xs ghost" data-edit-member="${m.id}"><i class="fa-solid fa-pen"></i> تعديل</button><button class="btn xs ghost danger" data-del-member="${m.id}"><i class="fa-solid fa-trash"></i> حذف</button>` })).join('')}
       </div>
     </div>`;
   }
@@ -338,6 +338,74 @@ const Admin = (() => {
         }
       }, { label: 'إلغاء', cls: 'ghost' }]
     });
+  }
+
+  /* إرسال معلومات الدخول: صورة البطاقة + رسالة واتساب برقم العضوية */
+  function credentialsText(m) {
+    const role = m.role === 'mentor' ? 'المرشد' : 'المستفيد';
+    const url = window.ISHRAQ_CONFIG.siteUrl || location.href.replace(/#.*$/, '');
+    return `تحية طيبة عزيزي ${role}، تم إضافتك إلى منصة إشراق، يمكنك الدخول إلى المنصة وتعديل البيانات وإدارة حجوزات الجلسات الإرشادية وكتابة التقييمات عبر الدخول إلى الرابط ( ${url} ) والضغط على (دخول ${role}) واستخدام رقم العضوية الخاص بك (${m.code})`;
+  }
+
+  async function sendCredentials(m) {
+    if (!m) return;
+    if (!m.whatsapp) return toast('أضف رقم واتساب لهذا العضو أولاً من زر «تعديل»', 'error');
+    let blob = null, url = '';
+    const file = `ishraq-${m.role === 'mentor' ? 'mentor' : 'mentee'}-card.png`;
+    const canShareFiles = () => {
+      try { return !!(navigator.canShare && navigator.canShare({ files: [new File([blob], file, { type: 'image/png' })] })); } catch { return false; }
+    };
+    const markSent = () => Store.update(`members/${m.id}`, { credSentAt: Date.now() });
+    const modal = openModal({
+      title: `<i class="fa-brands fa-whatsapp"></i> إرسال معلومات الدخول — ${esc(m.name)}`, size: 'md',
+      body: `<div class="cred">
+        <div class="cred-preview"><div class="cred-loading"><i class="fa-solid fa-spinner fa-spin"></i> جارٍ تجهيز صورة البطاقة...</div></div>
+        <div class="field"><label>نص الرسالة إلى <span dir="ltr">${esc(m.whatsapp)}</span></label><textarea name="msg" rows="6">${esc(credentialsText(m))}</textarea></div>
+        <p class="hint cred-hint"><i class="fa-solid fa-circle-info"></i> لا يسمح واتساب بإرفاق الصور عبر الروابط، لذلك عند الضغط على «إرسال عبر واتساب» تُنسخ صورة البطاقة وتُنزّل تلقائياً وتفتح المحادثة مع الرسالة جاهزة — الصق الصورة في المحادثة (Ctrl+V أو ضغطة مطوّلة ← لصق) ثم أرسل. على الجوال يمكنك استخدام «مشاركة الصورة والرسالة».</p>
+      </div>`,
+      actions: [
+        {
+          label: '<i class="fa-brands fa-whatsapp"></i> إرسال عبر واتساب', cls: 'wa', onClick: md => {
+            if (!blob) { toast('انتظر حتى تجهز صورة البطاقة', 'error'); return false; }
+            const text = $('[name=msg]', md.body).value;
+            let copied = false;
+            try {
+              if (navigator.clipboard && window.ClipboardItem) {
+                navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]).then(() => toast('تم نسخ صورة البطاقة — الصقها في محادثة واتساب')).catch(() => {});
+                copied = true;
+              }
+            } catch { /* ignore */ }
+            download(file, blob);
+            window.open(waLink(m.whatsapp, text), '_blank');
+            markSent();
+            if (!copied) toast('تم تنزيل صورة البطاقة — أرفقها في محادثة واتساب');
+          }
+        },
+        {
+          label: '<i class="fa-solid fa-share-nodes"></i> مشاركة الصورة والرسالة', cls: 'ghost share-btn', onClick: async md => {
+            if (!blob) return false;
+            const text = $('[name=msg]', md.body).value;
+            try {
+              await navigator.share({ files: [new File([blob], file, { type: 'image/png' })], text });
+              markSent();
+            } catch (e) { if (e.name !== 'AbortError') toast('تعذّرت المشاركة من هذا المتصفح', 'error'); return false; }
+          }
+        },
+        { label: '<i class="fa-solid fa-download"></i> تنزيل البطاقة', cls: 'ghost', onClick: () => { if (blob) download(file, blob); return false; } }
+      ]
+    });
+    try {
+      const r = await CardImage.toBlob(m);
+      blob = r.blob;
+      url = URL.createObjectURL(blob);
+      const prev = $('.cred-preview', modal.el);
+      if (prev) prev.innerHTML = `<img src="${url}" alt="بطاقة ${esc(m.name)}">${r.photoFailed ? '<p class="hint err-hint">تعذّر تضمين الصورة الشخصية من Google Drive، وظهرت الأحرف الأولى بدلاً منها.</p>' : ''}`;
+      if (!canShareFiles()) $('.share-btn', modal.el)?.setAttribute('hidden', '');
+    } catch (e) {
+      console.error(e);
+      const prev = $('.cred-preview', modal.el);
+      if (prev) prev.innerHTML = '<p class="hint err-hint">تعذّر إنشاء صورة البطاقة.</p>';
+    }
   }
 
   function networkBlock(c) {
@@ -643,6 +711,7 @@ const Admin = (() => {
       }
       const sb = t.closest('[data-sub]'); if (sb) { ui.sub = ui.sub === sb.dataset.sub ? null : sb.dataset.sub; return render(root); }
       const am = t.closest('[data-add-member]'); if (am) return addMember(am.dataset.addMember, ui.cohort);
+      const sc = t.closest('[data-send-cred]'); if (sc) return sendCredentials(Data.member(sc.dataset.sendCred));
       const em = t.closest('[data-edit-member]'); if (em) return Portal.editProfile(Data.member(em.dataset.editMember));
       const dm = t.closest('[data-del-member]');
       if (dm) {
