@@ -28,7 +28,7 @@ const Portal = (() => {
         <section class="panel">
           <h2><i class="fa-solid fa-id-card"></i> البطاقات التعريفية</h2>
           <div class="pair-cards">
-            <div><h3 class="sub">بطاقتي</h3>${memberCard(me, { actions: '<button class="btn sm primary" data-edit-me><i class="fa-solid fa-pen"></i> تعديل بياناتي</button>' })}</div>
+            <div><h3 class="sub">بطاقتي</h3>${memberCard(me, { actions: '<button class="btn sm primary" data-edit-me><i class="fa-solid fa-pen"></i> تعديل بياناتي</button><button class="btn sm ghost" data-download-card title="حفظ البطاقة كصورة PNG لمشاركتها"><i class="fa-solid fa-download"></i> حفظ البطاقة</button>' })}</div>
             <div class="pair-link"><i class="fa-solid fa-handshake"></i></div>
             <div><h3 class="sub">${otherLabel} المخصص لك</h3>${other ? memberCard(other, { showCode: false }) : emptyState(`لم يتم تعيين ${otherLabel} لك بعد من قبل الإدارة`, 'fa-user-clock')}</div>
           </div>
@@ -392,6 +392,7 @@ const Portal = (() => {
   function wire(root, kind, me, other) {
     $('[data-logout]', root).onclick = () => Auth.logout();
     $('[data-edit-me]', root)?.addEventListener('click', () => editProfile(me));
+    $('[data-download-card]', root)?.addEventListener('click', () => CardImage.download(Data.member(me.id)));
     $('[data-add-slot]', root)?.addEventListener('click', () => openAddSlot(me));
     $$('[data-del-slot]', root).forEach(b => b.onclick = async () => {
       if (await confirmDialog('حذف هذا الموعد؟', { danger: true, ok: 'حذف' })) Store.remove(`slots/${b.dataset.delSlot}`);
