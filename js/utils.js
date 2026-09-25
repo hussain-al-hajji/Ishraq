@@ -120,7 +120,7 @@ function memberCard(m, opts = {}) {
       ${m.tagline ? `<p class="mc-tag">${esc(m.tagline)}</p>` : ''}
       ${m.bio ? `<p class="mc-bio">${nl2br(m.bio)}</p>` : ''}
       ${areas.length ? `<div class="mc-areas"><small>${areasLabel}</small><div>${areas.map(a => `<span class="chip">${esc(a)}</span>`).join('')}</div></div>` : ''}
-      ${socialLinks(m, 'mc-social')}
+      ${opts.hideContacts ? '' : socialLinks(m, 'mc-social')}
     </div>
     ${opts.actions ? `<footer class="mc-actions">${opts.actions}</footer>` : ''}
   </article>`;

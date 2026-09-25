@@ -282,7 +282,15 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .m-group { background: #fff; border-radius: 24px; padding: 30px; margin-bottom: 24px; box-shadow: var(--sh); }
 .m-group h3 { display: flex; align-items: center; gap: .5em; font-size: 1.4rem; }
 .m-tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 22px; margin-top: 16px; }
-.m-tile { display: grid; justify-items: center; text-align: center; gap: 4px; padding: 18px 10px; border-radius: 18px; transition: .3s; }
+.m-tile { display: grid; justify-items: center; align-content: start; text-align: center; gap: 4px; padding: 18px 10px; border-radius: 18px; transition: .3s; border: 0; background: transparent; cursor: pointer; font: inherit; }
+.m-tile:hover .avatar { transform: scale(1.05); }
+.m-tile .avatar { transition: transform .3s; }
+.member-modal .modal { background: transparent; box-shadow: none; overflow: visible; }
+.member-modal .modal-head { border: 0; padding: 0 0 10px; justify-content: flex-start; }
+.member-modal .modal-head .modal-x { background: #fff; }
+.member-modal .modal-body { padding: 0; }
+.member-modal .member-card { box-shadow: var(--sh-lg); }
+.member-modal .member-card:hover { transform: none; }
 .m-tile:hover { background: var(--p-l); }
 .m-tile .avatar { margin-bottom: 8px; }
 .m-tile b { font-family: var(--font-head); color: var(--p-dd); }

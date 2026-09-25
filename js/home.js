@@ -228,7 +228,7 @@ const Home = (() => {
     const cohorts = Data.cohorts();
     if (!membersCohort || !cohorts.find(c => c.id === membersCohort)) membersCohort = cohorts[cohorts.length - 1]?.id;
     const cohort = Data.cohort(membersCohort);
-    const tile = m => `<div class="m-tile reveal">${avatar(m, 'xl')}<b>${esc(m.name)}</b>${m.tagline ? `<small>${esc(m.tagline)}</small>` : ''}</div>`;
+    const tile = m => `<button type="button" class="m-tile reveal" data-member="${esc(m.id)}" title="عرض البطاقة التعريفية">${avatar(m, 'xl')}<b>${esc(m.name)}</b>${m.tagline ? `<small>${esc(m.tagline)}</small>` : ''}</button>`;
     const group = (role, title, icon) => {
       const list = cohort ? Data.members(role, cohort.id) : [];
       return `<div class="m-group"><h3><i class="fa-solid ${icon}"></i> ${title} <span class="count">${list.length}</span></h3>
@@ -247,6 +247,12 @@ const Home = (() => {
       </div>
     </div>`;
     $$('[data-cohort]', root).forEach(b => b.onclick = () => { membersCohort = b.dataset.cohort; renderMembers(root); });
+    // البطاقة التعريفية في نافذة منبثقة (بدون رقم العضوية وبيانات التواصل)
+    $$('[data-member]', root).forEach(b => b.onclick = () => {
+      const m = Data.member(b.dataset.member);
+      if (!m) return;
+      openModal({ title: '', size: 'sm', cls: 'member-modal', body: memberCard(m, { showCode: false, hideContacts: true }) });
+    });
     const io = new IntersectionObserver(es => es.forEach(e => e.isIntersecting && e.target.classList.add('in')));
     $$('.reveal', root).forEach(el => io.observe(el));
   }
