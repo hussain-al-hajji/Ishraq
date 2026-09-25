@@ -247,7 +247,8 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .portal-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
 .portal { display: grid; justify-items: center; gap: 8px; padding: 34px 20px; border-radius: 22px; background: #fff; border: 1px solid var(--line); cursor: pointer; transition: .3s; text-align: center; }
 .portal i { font-size: 1.8rem; width: 72px; height: 72px; display: grid; place-items: center; border-radius: 22px; color: #fff; background: var(--grad); margin-bottom: 6px; transition: .3s; }
-.portal:nth-child(2) i { background: linear-gradient(135deg, var(--b-d), var(--b)); }
+.portal:nth-child(1) i { background: linear-gradient(135deg, var(--b-d), var(--b)); }
+.portal:nth-child(2) i { background: var(--grad); }
 .portal:nth-child(3) i { background: linear-gradient(135deg, #4D535A, var(--g)); }
 .portal b { font-family: var(--font-head); font-size: 1.25rem; color: var(--p-dd); }
 .portal small { color: var(--muted); }
