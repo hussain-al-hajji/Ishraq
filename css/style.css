@@ -373,6 +373,11 @@ h3.sub { font-size: 1.05rem; color: var(--ink-2); margin: 20px 0 12px; display: 
 .admin-tabs .badge { position: static; margin-inline-start: 2px; }
 .tab-panel { animation: rise .35s both; }
 
+.db-warning { display: flex; gap: 12px; align-items: flex-start; padding: 14px 18px; margin-bottom: 18px; border-radius: 16px; background: var(--bad-l); border: 1px solid #F5C4C4; color: #8A1F1F; font-weight: 600; }
+.db-warning i { font-size: 1.3rem; margin-top: .2em; }
+.db-warning p { margin: 0; }
+.db-warning code { direction: ltr; background: #fff; padding: 0 .4em; border-radius: 6px; }
+
 /* ترتيب الأقسام */
 .sortable { list-style: none; margin: 12px 0; padding: 0; display: grid; gap: 8px; }
 .sortable li { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 14px; border: 1px solid var(--line); background: #FDFCFF; transition: .15s; }

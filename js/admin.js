@@ -23,11 +23,21 @@ const Admin = (() => {
           <span class="muted small">${Store.mode === 'firebase' ? '<i class="fa-solid fa-cloud"></i> متصل بقاعدة البيانات' : '<i class="fa-solid fa-hard-drive"></i> وضع محلي (البيانات في هذا المتصفح فقط)'}</span></div>
           <div class="kpis">${kpis()}</div>
         </section>
+        ${dbWarning()}
         <nav class="admin-tabs">${TABS.map(t => `<button class="${ui.tab === t.id ? 'active' : ''}" data-tab="${t.id}" aria-expanded="${ui.tab === t.id}"><i class="fa-solid ${t.icon}"></i><span>${t.label}</span>${badges[t.id] ? `<em class="badge">${badges[t.id]}</em>` : ''}<i class="fa-solid fa-chevron-down caret"></i></button>`).join('')}</nav>
         <div class="tab-panel">${ui.tab ? (P[ui.tab] ? P[ui.tab]() : '') : `<div class="tab-hint">${emptyState('اضغط على أي تبويب لعرض تفاصيله، واضغط عليه مرة أخرى لإخفائها.', 'fa-hand-pointer')}</div>`}</div>
       </main>
     </div>`;
     wire(root);
+  }
+
+  function dbWarning() {
+    const e = Store.lastError;
+    if (Store.mode === 'firebase' && !e) return '';
+    const msg = Store.mode !== 'firebase'
+      ? 'تعذّر الاتصال بقاعدة البيانات، والتعديلات تُحفظ في هذا المتصفح فقط ولن تظهر للزوار. تأكد من نشر قواعد <code>database.rules.json</code> في Firebase Console ← Realtime Database ← Rules ثم أعد تحميل الصفحة.'
+      : `آخر عملية حفظ رُفضت من قاعدة البيانات (${esc(e.message)}). تأكد من قواعد Firebase ← Realtime Database ← Rules ثم أعد المحاولة.`;
+    return `<div class="db-warning"><i class="fa-solid fa-triangle-exclamation"></i><p>${msg}</p></div>`;
   }
 
   function kpis() {

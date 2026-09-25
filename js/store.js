@@ -96,15 +96,21 @@ const Store = (() => {
     return mode;
   }
 
+  let lastError = null;
+  // عند رفض الحفظ نعيد تحميل البيانات من الخادم حتى لا تُعرض تغييرات لم تُحفظ فعلياً
+  function writeFailed(err) {
+    console.error(err);
+    lastError = { message: err.message || String(err), ts: Date.now() };
+    window.toast && toast('لم يتم الحفظ في قاعدة البيانات: ' + lastError.message, 'error');
+    rootRef.once('value').then(snap => { state = snap.val() || {}; notify(); }).catch(() => notify());
+  }
+
   function set(path, val) {
     val = clean(val);
     state = setIn(state, path, val);
     if (rootRef) {
       const p = parts(path).join('/');
-      (p ? rootRef.child(p) : rootRef).set(val).catch(err => {
-        console.error(err);
-        window.toast && toast('تعذّر الحفظ في قاعدة البيانات: ' + err.message, 'error');
-      });
+      (p ? rootRef.child(p) : rootRef).set(val).catch(writeFailed);
     } else saveLocal();
     notify();
   }
@@ -114,10 +120,7 @@ const Store = (() => {
     Object.entries(obj).forEach(([k, v]) => { state = setIn(state, parts(path).concat(k).join('/'), v); });
     if (rootRef) {
       const p = parts(path).join('/');
-      (p ? rootRef.child(p) : rootRef).update(obj).catch(err => {
-        console.error(err);
-        window.toast && toast('تعذّر الحفظ في قاعدة البيانات: ' + err.message, 'error');
-      });
+      (p ? rootRef.child(p) : rootRef).update(obj).catch(writeFailed);
     } else saveLocal();
     notify();
   }
@@ -138,5 +141,5 @@ const Store = (() => {
   const list = path => Object.values(get(path) || {}).filter(Boolean);
   const subscribe = fn => { subs.add(fn); return () => subs.delete(fn); };
 
-  return { init, get, list, set, update, remove, push, newId, subscribe, get mode() { return mode; } };
+  return { init, get, list, set, update, remove, push, newId, subscribe, get mode() { return mode; }, get lastError() { return lastError; } };
 })();
