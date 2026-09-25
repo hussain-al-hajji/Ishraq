@@ -310,7 +310,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .mc-body .avatar.xl { box-shadow: 0 0 0 5px #fff, 0 10px 24px -8px rgba(46,37,99,.45); }
 .mc-name { margin: 14px 0 2px; font-size: 1.2rem; }
 .mc-tag { color: var(--p); font-weight: 600; margin: 0 0 10px; font-size: .95rem; }
-.mc-bio { color: var(--ink-2); font-size: .9rem; margin: 0 0 12px; display: -webkit-box; -webkit-line-clamp: 5; -webkit-box-orient: vertical; overflow: hidden; }
+.mc-bio { color: var(--ink-2); font-size: .9rem; margin: 0 0 12px; white-space: normal; overflow-wrap: anywhere; }
 .mc-areas { width: 100%; margin-bottom: 12px; }
 .mc-areas small { display: block; color: var(--muted); font-size: .75rem; margin-bottom: 4px; }
 .mc-areas div { display: flex; flex-wrap: wrap; gap: 5px; justify-content: center; }

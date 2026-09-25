@@ -88,7 +88,7 @@ const CardImage = (() => {
     meas.direction = 'rtl';
     const innerW = W - 72;
     meas.font = `400 17px ${BODY_FONT}`;
-    const bioLines = wrap(meas, m.bio, innerW).slice(0, 14);
+    const bioLines = wrap(meas, m.bio, innerW);
     const areas = String(m.areas || '').split(/[،,\n]/).map(s => s.trim()).filter(Boolean);
     meas.font = `600 15px ${BODY_FONT}`;
     const chipH = 34, chipGap = 8, chipPad = 16;
