@@ -418,11 +418,11 @@ const Admin = (() => {
       <div class="panel-head"><h2>${miniMember(m)} <i class="fa-solid fa-arrows-left-right muted"></i> ${miniMember(mentee)}</h2>${exportBar(`mentor-sessions:${m.id}`)}</div>
       <h3 class="sub"><i class="fa-regular fa-calendar"></i> المواعيد المعلنة من المرشد</h3>
       ${slots.length ? `<div class="table-wrap"><table class="table rtable"><thead><tr><th>الجلسة</th><th>التاريخ</th><th>الوقت</th><th>النوع</th><th>المحتوى</th></tr></thead><tbody>
-        ${slots.map(s => `<tr><td data-l="الجلسة">${sessionName(s.session)}</td><td data-l="التاريخ">${fmtDate(s.date)}</td><td data-l="الوقت">${s.start} - ${s.end}</td><td data-l="النوع">${MODES[s.mode] || ''}</td><td data-l="المحتوى">${esc(s.summary || '—')}</td></tr>`).join('')}
+        ${slots.map(s => `<tr><td data-l="الجلسة">${sessionName(s.session)}</td><td data-l="التاريخ">${fmtDate(s.date)}</td><td data-l="الوقت">${tRange(s.start, s.end)}</td><td data-l="النوع">${MODES[s.mode] || ''}</td><td data-l="المحتوى">${esc(s.summary || '—')}</td></tr>`).join('')}
       </tbody></table></div>` : '<p class="muted small">لم يعلن المرشد أي مواعيد بعد.</p>'}
       <h3 class="sub"><i class="fa-solid fa-list-check"></i> تحديثات الجلسات</h3>
       ${bks.length ? `<div class="table-wrap"><table class="table rtable"><thead><tr><th>رقم الجلسة</th><th>تاريخ الجلسة</th><th>الوقت</th><th>النوع</th><th>وضع الجلسة</th></tr></thead><tbody>
-        ${bks.map(b => `<tr><td data-l="رقم الجلسة">${sessionName(b.session)}</td><td data-l="التاريخ">${fmtDate(b.date)}</td><td data-l="الوقت">${b.start} - ${b.end}</td><td data-l="النوع">${MODES[b.mode] || ''}</td><td data-l="الحالة">${statusPill(b.status)}</td></tr>`).join('')}
+        ${bks.map(b => `<tr><td data-l="رقم الجلسة">${sessionName(b.session)}</td><td data-l="التاريخ">${fmtDate(b.date)}</td><td data-l="الوقت">${tRange(b.start, b.end)}</td><td data-l="النوع">${MODES[b.mode] || ''}</td><td data-l="الحالة">${statusPill(b.status)}</td></tr>`).join('')}
       </tbody></table></div>` : '<p class="muted small">لم يتم حجز أي جلسة بعد.</p>'}
       ${statsBoxes(Data.stats(bks), true)}
     </div>`;

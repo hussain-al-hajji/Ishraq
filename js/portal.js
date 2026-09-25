@@ -65,7 +65,7 @@ const Portal = (() => {
       const list = slots.filter(s => s.session === n);
       return `<div class="slot-group"><h3>${sessionName(n)} <span class="count">${list.length}</span></h3>
         ${list.length ? `<ul class="slot-list">${list.map(s => `<li class="${booked.has(s.id) ? 'booked' : ''}">
-          <div><b><i class="fa-regular fa-calendar"></i> ${fmtDate(s.date)}</b><span><i class="fa-regular fa-clock"></i> ${s.start} - ${s.end}</span>
+          <div><b><i class="fa-regular fa-calendar"></i> ${fmtDate(s.date)}</b><span><i class="fa-regular fa-clock"></i> ${tRange(s.start, s.end)}</span>
           <span class="chip">${MODES[s.mode] || ''}</span>${s.summary ? `<p>${esc(s.summary)}</p>` : ''}</div>
           ${booked.has(s.id) ? '<span class="pill st-done">محجوز</span>' : `<button class="icon-btn danger" data-del-slot="${s.id}" title="حذف"><i class="fa-solid fa-trash"></i></button>`}
         </li>`).join('')}</ul>` : '<p class="muted small">لا توجد مواعيد مقترحة</p>'}</div>`;
@@ -132,7 +132,7 @@ const Portal = (() => {
       else {
         const list = slots.filter(s => s.session === n && !taken.has(s.id) && dateTimeOf(s.date, s.start) > new Date());
         inner = list.length ? `<ul class="slot-list">${list.map(s => `<li>
-          <div><b><i class="fa-regular fa-calendar"></i> ${fmtDate(s.date)}</b><span><i class="fa-regular fa-clock"></i> ${s.start} - ${s.end}</span>
+          <div><b><i class="fa-regular fa-calendar"></i> ${fmtDate(s.date)}</b><span><i class="fa-regular fa-clock"></i> ${tRange(s.start, s.end)}</span>
           <span class="chip">${MODES[s.mode] || ''}</span>${s.summary ? `<p>${esc(s.summary)}</p>` : ''}</div>
           <button class="btn sm primary" data-book="${s.id}"><i class="fa-solid fa-check"></i> احجز</button></li>`).join('')}</ul>`
           : '<p class="muted small">لا توجد مواعيد متاحة حالياً لهذه الجلسة</p>';
@@ -192,7 +192,7 @@ const Portal = (() => {
       }
       return `<tr>
         <td data-l="الجلسة"><b>${sessionName(b.session)}</b></td>
-        <td data-l="الموعد">${fmtDate(b.date)}<br><small>${b.start} - ${b.end}</small>${b.changedBy ? `<br><small class="muted"><i class="fa-solid fa-rotate"></i> عُدّل الموعد</small>` : ''}</td>
+        <td data-l="الموعد">${fmtDate(b.date)}<br><small>${tRange(b.start, b.end)}</small>${b.changedBy ? `<br><small class="muted"><i class="fa-solid fa-rotate"></i> عُدّل الموعد</small>` : ''}</td>
         <td data-l="النوع">${MODES[b.mode] || ''}</td>
         <td data-l="المحتوى">${esc(b.summary || '—')}</td>
         <td data-l="الحالة">${statusPill(b.status)}</td>
@@ -206,7 +206,7 @@ const Portal = (() => {
   }
 
   function rescheduleText(kind, b) {
-    const when = `${fmtDate(b.date)} الساعة ${b.start} - ${b.end}`;
+    const when = `${fmtDate(b.date)} الساعة ${tRange(b.start, b.end)}`;
     return kind === 'mentor'
       ? `عزيزي مستفيد الجلسة الإرشادية في إشراق، لظرف طارئ تم تغيير موعد الجلسة إلى "${when}" في حال كان مناسباً لك فضلاً التأكيد أو اقتراح موعد أنسب`
       : `عزيزي مرشد الجلسة الإرشادية في إشراق، لظرف طارئ تم تغيير موعد الجلسة إلى "${when}" في حال كان مناسباً لك فضلاً التأكيد أو اقتراح موعد أنسب`;

@@ -38,7 +38,9 @@ function minutesBetween(start, end) {
   const [h2, m2] = String(end).split(':').map(Number);
   return Math.max(0, (h2 * 60 + m2) - (h1 * 60 + m1));
 }
-const fmtSlot = x => `${fmtDate(x.date)} · ${x.start} - ${x.end}`;
+// نطاق الوقت يُعرض من اليسار لليمين (18:00 - 19:00) حتى داخل النص العربي
+const tRange = (a, b) => `\u2066${a} - ${b}\u2069`;
+const fmtSlot = x => `${fmtDate(x.date)} · ${tRange(x.start, x.end)}`;
 
 function timeSelect(name, value = '') {
   const [hv, mv] = String(value || '').split(':');
